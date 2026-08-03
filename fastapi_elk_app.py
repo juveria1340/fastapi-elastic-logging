@@ -1,9 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import logging
-import json
+import os
 import time
-from datetime import datetime
 from pythonjsonlogger import jsonlogger
 import uuid
 
@@ -12,6 +11,8 @@ app = FastAPI()
 # ===== JSON Logging Setup =====
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+os.makedirs("logs", exist_ok=True)
 
 # Create console handler with JSON formatter
 logHandler = logging.FileHandler("logs/app.log")

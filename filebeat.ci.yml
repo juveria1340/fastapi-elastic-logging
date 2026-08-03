@@ -1,0 +1,18 @@
+filebeat.inputs:
+- type: filestream
+  id: fastapi-app-log
+  enabled: true
+  paths:
+    - ./logs/app.log
+  parsers:
+    - ndjson:
+        message_key: message
+        keys_under_root: true
+        add_error_key: true
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+
+filebeat.idle_timeout: 10s
+logging.level: info
+logging.to_stderr: true
