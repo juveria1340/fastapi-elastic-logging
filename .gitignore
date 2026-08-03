@@ -1,0 +1,17 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Filebeat vendor binary (download separately, ~180MB+)
+filebeat-9.4.2-windows-x86_64/
+
+# Secrets - real Filebeat config with live API key, use filebeat.yml.example instead
+filebeat.yml
+
+# Runtime-generated logs
+logs/
+filebeat-run.log
+filebeat-run-err.log
+fastapi-app.log
+fastapi-app-err.log

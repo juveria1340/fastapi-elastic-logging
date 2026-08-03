@@ -1,0 +1,31 @@
+filebeat.inputs:
+- type: filestream
+  id: fastapi-app-log
+  enabled: true
+  paths:
+    - ./logs/app.log
+  parsers:
+    - ndjson:
+        message_key: message
+        keys_under_root: true
+        add_error_key: true
+
+output.elasticsearch:
+  # Replace with your Elastic Cloud endpoint
+  # Example: https://abc123abc123.us-central1.gcp.cloud.es.io:443
+  hosts: ["YOUR_ELASTICSEARCH_ENDPOINT"]
+
+  # Use the API key from Kibana -> Stack Management -> API Keys -> Create
+  # Format: "id:api_key" (plain, NOT base64-encoded)
+  api_key: "YOUR_API_KEY_ID:YOUR_API_KEY_SECRET"
+
+  ssl.verification_mode: full
+
+filebeat.idle_timeout: 10s
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: ./filebeat-logs
+  name: filebeat
+  keepfiles: 7

@@ -1,0 +1,24 @@
+services:
+  fastapi-app:
+    image: python:3.11-slim
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "pip install -r requirements.txt && 
+             mkdir -p logs && 
+             python fastapi_elk_app.py"
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:9.4.2
+    user: root
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./logs:/usr/share/filebeat/logs:ro
+    command: ["--strict.perms=false", "-e"]
+    depends_on:
+      - fastapi-app
