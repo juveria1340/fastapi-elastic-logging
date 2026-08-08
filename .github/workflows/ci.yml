@@ -32,6 +32,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Elasticsearch commonly needs this raised on the Docker host, otherwise
+      # it can be slow/flaky creating indices even while reporting healthy.
+      - name: Raise vm.max_map_count for Elasticsearch
+        run: sudo sysctl -w vm.max_map_count=262144
+
       # Uses docker-compose.ci.yml, which swaps in a throwaway local
       # Elasticsearch + non-secret filebeat.ci.yml instead of the real,
       # gitignored filebeat.yml / Elastic Cloud. No secrets required, and
@@ -78,7 +83,7 @@ jobs:
       - name: Assert event landed in Elasticsearch
         run: |
           REQUEST_ID="${{ steps.post_event.outputs.request_id }}"
-          for i in $(seq 1 20); do
+          for i in $(seq 1 40); do
             COUNT=$(curl -s "http://localhost:9200/filebeat-*/_count?q=request_id:$REQUEST_ID" \
               | python3 -c "import sys,json; print(json.load(sys.stdin).get('count', 0))")
             if [ "$COUNT" = "1" ]; then
@@ -86,9 +91,19 @@ jobs:
               exit 0
             fi
             echo "Waiting for event to be indexed... ($i)"
-            sleep 3
+            sleep 5
           done
-          echo "Event never appeared in Elasticsearch"
+
+          echo "::error::Event never appeared in Elasticsearch after 200s - dumping diagnostics"
+          echo "--- Elasticsearch indices ---"
+          curl -s "http://localhost:9200/_cat/indices?v"
+          echo "--- Raw count response ---"
+          curl -s "http://localhost:9200/filebeat-*/_count?q=request_id:$REQUEST_ID"
+          echo
+          echo "--- filebeat container logs (last 100 lines) ---"
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml logs --tail=100 filebeat
+          echo "--- elasticsearch container logs (last 50 lines) ---"
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml logs --tail=50 elasticsearch
           exit 1
 
       - name: Dump service logs on failure
