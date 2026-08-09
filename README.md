@@ -1,5 +1,7 @@
 # FastAPI + ELK Logging Pipeline
 
+![CI](https://github.com/<your-github-username>/<your-repo-name>/actions/workflows/ci.yml/badge.svg)
+
 A small project demonstrating structured JSON logging from a FastAPI app, shipped by Filebeat, into Elasticsearch (Elastic Cloud), and explored in Kibana — all orchestrated with a single `docker-compose up`.
 
 ## How it works
@@ -79,15 +81,39 @@ curl http://localhost:8000/jobs
 4. Widen the time range (e.g. "Last 24 hours") if you don't see results immediately.
 5. Expand a document (▸) or add columns like `request_id`, `status_code`, `endpoint`, `response_time_ms`, `job_title` via the field list on the left to see your structured fields — the default columns shown are generic security/ECS fields your app doesn't populate, so they'll appear blank.
 
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest tests/ -v
+```
+
+`tests/test_app.py` covers all API endpoints (success and error paths) plus a check that requests actually produce parsable, correctly-fielded JSON log lines — since structured logging is the whole point of this project, not just the API responses.
+
+## Continuous Integration
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push/PR to `main`, two jobs:
+
+1. **`lint-and-test`** — `ruff check .` and `pytest tests/`.
+2. **`smoke-test`** — spins up the full stack with `docker-compose.ci.yml`, which overrides the Filebeat output to point at a **throwaway local Elasticsearch container** instead of your real Elastic Cloud deployment (config: `filebeat.ci.yml`, no secrets involved). It then posts a real request to the running API and polls the local Elasticsearch until that exact event shows up, proving the whole pipeline — app → log file → Filebeat → Elasticsearch — actually works, not just that each piece starts.
+
+This intentionally never touches your production Elastic Cloud cluster or credentials, so it's safe to run on every push, including from forks/PRs.
+
 ## File structure
 
 ```
 .
 ├── fastapi_elk_app.py     # FastAPI app with structured JSON logging
-├── requirements.txt       # Python dependencies (used if running the app outside Docker)
+├── requirements.txt       # Runtime Python dependencies
+├── requirements-dev.txt   # + pytest, httpx, ruff for local dev/CI
+├── tests/
+│   └── test_app.py        # API + structured-logging tests
 ├── filebeat.yml.example   # Filebeat config template — copy to filebeat.yml and fill in credentials
 ├── filebeat.yml           # Your real config with live credentials (gitignored, not tracked)
+├── filebeat.ci.yml        # Non-secret Filebeat config used only by the CI smoke test
 ├── docker-compose.yml     # Orchestrates fastapi-app + filebeat containers
+├── docker-compose.ci.yml  # CI override: adds a local Elasticsearch, swaps in filebeat.ci.yml
+├── .github/workflows/ci.yml  # Lint + test + smoke-test pipeline
 ├── .gitignore             # Excludes filebeat.yml, .venv/, logs/, and the vendor binary
 ├── logs/
 │   └── app.log            # Generated JSON log file (shared volume, gitignored)

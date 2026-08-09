@@ -2,6 +2,7 @@
 .venv/
 __pycache__/
 *.pyc
+.pytest_cache/
 
 # Filebeat vendor binary (download separately, ~180MB+)
 filebeat-9.4.2-windows-x86_64/
