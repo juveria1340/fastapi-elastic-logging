@@ -2,6 +2,11 @@ filebeat.inputs:
 - type: filestream
   id: fastapi-app-log
   enabled: true
+  # Use inode-based file identity instead of the default content fingerprint,
+  # which refuses to harvest a file until it's at least 1024 bytes - that
+  # silently stalls ingestion for freshly created/rotated small log files.
+  prospector.scanner.fingerprint.enabled: false
+  file_identity.native: ~
   paths:
     - ./logs/app.log
   parsers:
