@@ -1,8 +1,7 @@
 # FastAPI + ELK Logging Pipeline
 
-![CI](https://github.com/<your-github-username>/<your-repo-name>/actions/workflows/ci.yml/badge.svg)
 
-A small project demonstrating structured JSON logging from a FastAPI app, shipped by Filebeat, into Elasticsearch (Elastic Cloud), and explored in Kibana — all orchestrated with a single `docker-compose up`.
+A project demonstrating structured JSON logging from a FastAPI app, shipped by Filebeat, into Elasticsearch (Elastic Cloud), and explored in Kibana — all orchestrated with a single `docker-compose up`.
 
 ## How it works
 
